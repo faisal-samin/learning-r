@@ -1,0 +1,237 @@
+---
+title: "R Notebook"
+fontsize: 12 pt
+output:
+  html_notebook:
+    # "cerulean", "journal", "flatly", "readable", "spacelab", and "cosmo".
+    number_sections: yes
+    theme: cosmo
+    toc: yes
+    toc_depth: 2
+    toc_float: yes
+    highlight: tango
+editor_options: 
+  chunk_output_type: console
+---
+
+Notes taken during study of [R for Data Science](http://r4ds.had.co.nz/).
+
+# Introduction
+
+The majority of packages used in the book are part of the tidyverse universe. The packages in the tidyverse share a common philosophy of data and R programming, and are designed to work together naturally.
+
+You can install them with the following bit of code (need to do this once only):
+
+```{r}
+install.packages(tidyverse)
+```
+
+Once installed, you can load it with the library() function:
+
+```{r}
+library(tidyverse)
+```
+
+Can check for updates with
+
+```{r}
+tidyverse_update()
+```
+
+In the book, three packages outside the tidyverse are used to import datasets. These packages provide data on airline flights, world development, and baseball that we’ll use to illustrate key data science ideas.
+
+
+```{r}
+install.packages(c("nycflights13", "gapminder", "Lahman"), repos = "http://cran.us.r-project.org")
+```
+
+
+# Explore
+
+The goal in the explore chapter is to get you upto speed witb basic tools of data exploration as quickly as possible. 
+
+## Data visualisation 
+
+* ggplot2 is used to visualise data in the book, it is one of many systems for making graphs.
+* ggplot2 implements the grammar of graphics which helps make syntax more intuitive and easy to understand.
+* can be installed with tidyverse.
+
+
+```{r}
+mpg # preview dataset
+```
+
+Use this code to plot the above with ggplot
+
+```{r plot}
+ggplot(data = mpg) +
+  geom_point(mapping = aes(x = displ, y = hwy))
+```
+
+How ggplot works:
+
+* begin with a function ggplot(). This creates a coordinate system that you add layers to.
+* first argument is the is the dataset to use in the graph. 
+* the function geom_point() adds a layer of points to your plot 
+* each geom function in ggplot takes a mapping argument that defines how variables are mapped to visual properties. The mapping argument is always paired with aes().
+
+You can map a third variable to a 2-d scatterplot by mapping it to an aesthetic, a visual property of the objects in your plot. 
+
+```{r plot with aesthetic}
+ggplot(data = mpg) + 
+  geom_point(mapping = aes(x = displ, y = hwy, colour = class))
+# instead of colour, there is also, size, or alpha 
+```
+
+```{r}
+# To get help, add question mark in front of functions or datasets
+?function_name
+```
+
+You can also add additional variables to your data with facets, which allow you to split your plot into subplots that display a subset of the data.
+
+```{r plot wht facets}
+ggplot(data = mpg) + 
+  geom_point(mapping = aes(x = displ, y = hwy)) + 
+  facet_wrap(~ class, nrow = 2)
+```
+
+You can also facet your plot on the combination of two variables.
+
+```{r}
+ggplot(data = mpg) + 
+  geom_point(mapping = aes(x = displ, y = hwy)) + 
+  facet_grid(drv ~ cyl) 
+```
+
+* A geom is the geomoetrical object that a plot uses to represent data. We can use different geoms to plot the same data. For example, geom_point for scatterplots, geom_smooth for continuous curve plots. 
+* ggplot2 has over 30 geoms and the best place to get an overview is the ggplot2 cheatsheet.  
+
+You can add a a group aesthetic to a categorical variable to draw multiple plots on the same graph.
+
+```{r grouped plot}
+ggplot(data = mpg) +
+  geom_smooth(mapping = aes(x = displ, y = hwy, group = drv))
+  # group by front-wheel, rear wheel or four wheel drive
+```
+
+Plot multiple geoms on the same plot by passing the mapping to ggplot: 
+
+```{r multiple geoms on same plot}
+ggplot(data = mpg, mapping = aes(x = displ, y = hwy)) + 
+         geom_point() + geom_smooth()
+```
+
+Plotting a bar chart:
+
+```{r bar chart}
+ggplot(data = diamonds) + 
+  geom_bar(mapping = aes(x = cut))
+  # ?diamonds to inspect variables
+```
+
+```{r bar chart - stacked}
+ggplot(data = diamonds) + 
+  geom_bar(mapping = aes(x = cut, fill = clarity)) # coloured by cut of diamond
+  # ?diamonds to inspect variables
+```
+
+```{r bar chart - same height}
+ggplot(data = diamonds) + 
+  geom_bar(mapping = aes(x = cut, fill = clarity), position = "fill")
+  # position = 'fill' makes the bars the same height
+```
+
+```{r bar chart - dodge}
+ggplot(data = diamonds) + 
+  geom_bar(mapping = aes(x = cut, fill = clarity), position = 'dodge')
+  # position = 'fill' makes the bars the same height
+```
+
+```{r boxplot}
+ggplot(data = mpg, mapping = aes(x = class, y = hwy)) + 
+  geom_boxplot()
+```
+
+
+The code template to use is given below. These seven parameters compose the grammar of graphics, a formal system of building plots. The grammar of graphics is based on the insight that you can uniquely describe any plot as a combination of a dataset, a geom, a set of mappings, a stat, a position adjustment, a coordinate system, and a faceting scheme.
+
+```{r}
+ggplot(data = <DATA>) + 
+  <GEOM_FUNCTION>(
+     mapping = aes(<MAPPINGS>),
+     stat = <STAT>, 
+     position = <POSITION>
+  ) +
+  <COORDINATE_FUNCTION> +
+  <FACET_FUNCTION>
+```
+
+## Workflow: basics 
+
+```{r}
+# You can use R as a calculator 
+3 + 4
+2 * 3 + 18
+sin(60) ^ 2
+```
+
+
+```{r assignment}
+# You can create new objects with <- 
+x <- 3 + 4
+```
+
+```{r functions}
+# R has a large collection of built-in functions that look like this:
+function_name(arg1 = val1, arg2 = val2, ...)
+```
+
+Useful functions:
+```{r useful functions}
+seq(start, end) # generate sequence of numbers
+```
+
+## Data transformation 
+
+Importing flights data with a library:
+```{r}
+library(nycflights13)
+```
+
+The following data frame prints differently from others, it shows a few rows and columns that fit on the screen. It's called a **tibble**. Tibbles are data frames that are tweaked to work better with the tidyverse.
+
+```{r tibble}
+flights
+# view(flights) # see full dataset
+```
+
+**dplyr** is a package within the tidyverse that makes data manipulation easier. The following six functions are of most importance:
+
+```{r dplyr}
+filter() # Pick observations by their values
+arrange() # Reorder the rows
+select() # Pick variables by their names
+mutate() # Create new variables with functions of existing variables
+summarise() # Collapse many values down to a single summary
+group_by() # change the scope of each function from operating on the entire dataset to operating on it group-by-group
+```
+
+Using some of these functions 
+
+```{r}
+filter(flights, month == 1, day == 1)
+```
+
+R either prints the results, or saves it to a variable. If you want to do both, you need to wrap the whole thing in parantheses.
+
+```{r}
+(dec25 <- filter(flights, month == 12, day == 25))
+```
+
+```{r}
+# boolean operators, flights that departed in nov or dec
+filter(flights, month == 11 | month == 12)
+```
+
+One important feature of R that can make comparison tricky are **missing values**, or NAs (“not availables”). NA represents an unknown value so missing values are “contagious”: almost any operation involving an unknown value will also be unknown.
